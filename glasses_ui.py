@@ -131,7 +131,7 @@ class GlassesTools(QMainWindow, QWidget):
 
         return check_passed
 
-    def check_selection_components(self, type, components, absolute=False):
+    def check_selection_components(self, components, type='', absolute=False):
         check_passed = True
         component_type = ''
 
@@ -202,6 +202,7 @@ class GlassesTools(QMainWindow, QWidget):
         # Setting up mode and axis
         mel.eval('setToolTo $gMove')
         mc.manipMoveContext('Move', e=True, mode=10)
+        mel.eval("string $objs[] = `ls -sl -type transform -type geometryShape`;if (size($objs) > 0) { xform -cp; } manipPivot -rp -ro;")
         manip_pos = mc.manipMoveContext('Move', p=True, q=True)
         
         # Get selection information
@@ -254,13 +255,13 @@ class GlassesTools(QMainWindow, QWidget):
         mc.select(cl=True)
         mc.select(component_from_selection)
         
-        selected_comopnents = mc.ls(sl=True, flatten=True)
-        pos_one = self.round_vtx_pos(mc.xform(selected_comopnents[0], t=True, ws=True, q=True))
-        pos_two = self.round_vtx_pos(mc.xform(selected_comopnents[1], t=True, ws=True, q=True))
+        selected_components = mc.ls(sl=True, flatten=True)
+        pos_one = self.round_vtx_pos(mc.xform(selected_components[0], t=True, ws=True, q=True))
+        pos_two = self.round_vtx_pos(mc.xform(selected_components[1], t=True, ws=True, q=True))
         
         pos_list = [pos_one, pos_two]
         selection_mesh = selection.split('.')[0]
-        out_data = [selection_mesh, pos_list]
+        out_data = [selection_mesh, selected_components, pos_list]
         
         return out_data
    
@@ -308,7 +309,7 @@ class GlassesTools(QMainWindow, QWidget):
         length_passed = self.check_selection_length(len(mc.ls(sl=True)), 1)
         if not length_passed:
             return
-        component_passed = self.check_selection_components('face', mc.ls(sl=True), absolute=True)
+        component_passed = self.check_selection_components(mc.ls(sl=True), 'face', absolute=True)
 
         if not component_passed or component_passed == 'non_component':
             mc.warning("Please select a face.")
@@ -331,29 +332,48 @@ class GlassesTools(QMainWindow, QWidget):
     def realign_asset_button_clicked(self):
 
         # Prechecks
-        
-        component_passed = self.check_selection_components('edge', self.list_one.selectedItems()[0].text(), absolute=True)
+        component_passed = self.check_selection_components(self.list_one.selectedItems()[0].text(), 'edge', absolute=True)
         if not component_passed or component_passed == 'non_component':
             mc.warning("Please select an edge")
             return
         
         selected_item = self.list_one.selectedItems()[0].text()
         obj_of_item = selected_item.split('.')[0]
-        mc.warning('')
 
         vtx_positions = self.convert_selection_to_components(selected_item, 'vtx')
-        vector_direction = self.get_vector_direction(vtx_positions[1])
-        
+        vector_direction = self.get_vector_direction(vtx_positions[2])
+
         if vector_direction == 'same':
             mc.warning(f"{selected_item} is already aligned.")
             return
 
-        elif vector_direction > 45:
-            mc.xform(obj_of_item, ro=[0,-vector_direction,0])
+        if (math.isclose(vtx_positions[2][0][0], vtx_positions[2][1][0], abs_tol = 0.0011) or 
+            math.isclose(vtx_positions[2][0][2], vtx_positions[2][1][2], abs_tol = 0.0011)):
+            mc.warning(f"{selected_item} is already aligned.")
+            return
+
+        while True:
+            obj_rot = mc.xform(obj_of_item, ro=True, q=True)[1]
+            mc.xform(obj_of_item, ro=[0,obj_rot-vector_direction,0])
+
+            vtx_one_pos = mc.xform(vtx_positions[1][0], t=True, ws=True, q=True)
+            for pos in vtx_one_pos:
+                vtx_one_pos[vtx_one_pos.index(pos)] = round(pos, 3)
+    
+            vtx_two_pos = mc.xform(vtx_positions[1][1], t=True, ws=True, q=True)
+            for pos in vtx_two_pos:
+                vtx_two_pos[vtx_two_pos.index(pos)] = round(pos, 3)
             
-        elif vector_direction < 45:
-            mc.xform(obj_of_item, ro=[0,vector_direction,0])
-        
+            if vtx_one_pos[0] == vtx_two_pos[0] or vtx_one_pos[2] == vtx_two_pos[2]:
+                break
+
+            elif (math.isclose(vtx_one_pos[0], vtx_two_pos[0], abs_tol = 0.0011) or 
+                  math.isclose(vtx_one_pos[2], vtx_two_pos[2], abs_tol = 0.0011)):
+                break
+
+            print(vtx_one_pos)
+            print(vtx_two_pos)
+                
         mc.makeIdentity(obj_of_item, apply=True, t=1, r=1, s=1, n=0)
         return
         
@@ -387,4 +407,6 @@ window.show()
 # window = GlassesTools()
 # window.show()
 # app.exec_()
+
+
 
