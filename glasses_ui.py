@@ -1,8 +1,11 @@
 import sys
 import maya.cmds as mc
+import maya.mel as mel
+import math
 from PySide2.QtCore import (
     QSize, 
-    Qt
+    Qt,
+    QTimer
 )
     
 from PySide2.QtWidgets import (
@@ -32,27 +35,37 @@ class GlassesTools(QMainWindow, QWidget):
         # Initial setup
         self.master_widget = QWidget()
         self.master_layout = QHBoxLayout(self.master_widget)
-        
+        self.timer = QTimer(self)
+        self.timer.timeout.connect(self.check_selection)
+        self.timer.start(10)
+
+
         # Layout one
         self.layout_one = QVBoxLayout()
         self.master_layout.addLayout(self.layout_one)
         
-        self.button_one = QPushButton("Retransform Asset")
-        self.button_one.clicked.connect(self.button_one_clicked)
-        self.button_two = QPushButton("Realign Asset")
-        self.button_two.clicked.connect(self.button_two_clicked)
-        self.button_three = QPushButton("Rotate 90")
-        self.button_three.clicked.connect(self.button_three_clicked)
+        self.retransform_asset_button = QPushButton("Retransform Asset")
+        self.center_selection_button = QPushButton("Center Selection")
+        self.realign_asset_button = QPushButton("Realign Asset")
+        self.realign_asset_button.setEnabled(False)
+        self.rotate_ninety_button = QPushButton("Rotate 90")
+
+        self.retransform_asset_button.clicked.connect(self.retransform_asset_button_clicked)
+        self.center_selection_button.clicked.connect(self.center_selection_button_clicked)
+        self.realign_asset_button.clicked.connect(self.realign_asset_button_clicked)
+        self.rotate_ninety_button.clicked.connect(self.rotate_ninety_button_clicked)
         
         self.list_one = QListWidget()
         self.list_one.SelectionMode(1)
         
-        self.layout_one.addWidget(self.button_one)
+        self.layout_one.addSpacing(10)
+        self.layout_one.addWidget(self.retransform_asset_button)
         self.layout_one.addWidget(self.list_one)
-        self.layout_one.addSpacing(100)
-        self.layout_one.addWidget(self.button_two)
-        self.layout_one.addWidget(self.button_three)
-        
+        self.layout_one.addWidget(self.center_selection_button)
+        self.layout_one.addWidget(self.realign_asset_button)
+        self.layout_one.addWidget(self.rotate_ninety_button)
+        self.layout_one.addSpacing(50)
+
         # Layout two
         self.layout_two = QVBoxLayout()
         self.master_layout.addLayout(self.layout_two)
@@ -84,7 +97,7 @@ class GlassesTools(QMainWindow, QWidget):
 
         if selection_length == 0:
             check_passed = False
-            mc.warning("Please select an object.")
+            mc.warning("Cannot have empty selection. Please select a face.")
             return check_passed
  
         if check_range:
@@ -118,49 +131,53 @@ class GlassesTools(QMainWindow, QWidget):
 
         return check_passed
 
-    def check_selection_components(self, type, components):
+    def check_selection_components(self, type, components, absolute=False):
         check_passed = True
+        component_type = ''
 
-        sel_type = components[0].split('.')[1]
-        if len(components) > 1:
-            for component in components:
-                if type == 'vtx':
-                    if sel_type[0] != 'v':
-                        check_passed = False
-                        mc.warning("Please select a vertex.")
-                        return check_passed
-        
-                if type == 'edge':
-                    if sel_type[0] != 'e':
-                        check_passed = False
-                        mc.warning("Please select an edge.")            
-                        return check_passed
-                        
-                if type == 'face':
-                    if sel_type[0] != 'f':
-                        check_passed = False
-                        mc.warning("Please select a face.")
-                        return check_passed                
-        else:           
+        try:
+            if isinstance(components, list):
+                sel_type = components[0].split('.')[1][0]
+            else:
+                sel_type = components.split('.')[1][0]
+            
+        except:
+            component_type = 'non_component'
+            return component_type
+
+        if absolute:         
             if type == 'vtx':
-                if sel_type[0] != 'v':
+                if sel_type != 'v':
                     check_passed = False
                     mc.warning("Please select a vertex.")
                     return check_passed
     
             if type == 'edge':
-                if sel_type[0] != 'e':
+                if sel_type != 'e':
                     check_passed = False
                     mc.warning("Please select an edge.")            
                     return check_passed
                     
             if type == 'face':
-                if sel_type[0] != 'f':
+                if sel_type != 'f':
                     check_passed = False
                     mc.warning("Please select a face.")
                     return check_passed
+                    
+            return check_passed
+                    
+        else:
+            if sel_type == 'v':
+                component_type = 'vtx'
+                return component_type
 
-        return check_passed
+            if sel_type == 'e':
+                component_type = 'edge'
+                return component_type
+
+            if sel_type == 'f':
+                component_type = 'face'
+                return component_type 
     
     # added multiselected functionality
     def get_selection_components(self, selection, from_component_type, to_component_type):
@@ -216,71 +233,131 @@ class GlassesTools(QMainWindow, QWidget):
         
         return face_sel
 
-    def convert_selection_to_vtx(self, selection):
+    def round_vtx_pos(self, pos_list):
+    
+        new_pos_list = []
+        for pos in pos_list:
+            new_pos = round(pos, 3)
+            
+            new_pos_list.append(new_pos)
+        return new_pos_list
+    
+    def convert_selection_to_components(self, selection, type):
         
-        if '.e[' not in selection: # this is redundant I think
-            mc.warning("Please select an edge!")
-            return
-        vtx_from_selection = mc.polyListComponentConversion(selection, tv=True)
+        if type == 'vtx':
+            component_from_selection = mc.polyListComponentConversion(selection, tv=True)
+        if type == 'edge':
+            component_from_selection = mc.polyListComponentConversion(selection, te=True)
+        if type == 'face':
+            component_from_selection = mc.polyListComponentConversion(selection, tf=True)
+
         mc.select(cl=True)
-        mc.select(vtx_from_selection)
+        mc.select(component_from_selection)
         
-        selected_vtx = mc.ls(sl=True, flatten=True)
-        vtx_one_pos = round_vtx_pos(mc.xform(selected_vtx[0], t=True, ws=True, q=True))
-        vtx_two_pos = round_vtx_pos(mc.xform(selected_vtx[1], t=True, ws=True, q=True))
+        selected_comopnents = mc.ls(sl=True, flatten=True)
+        pos_one = self.round_vtx_pos(mc.xform(selected_comopnents[0], t=True, ws=True, q=True))
+        pos_two = self.round_vtx_pos(mc.xform(selected_comopnents[1], t=True, ws=True, q=True))
         
-        vtx_pos_list = [vtx_one_pos, vtx_two_pos]
+        pos_list = [pos_one, pos_two]
         selection_mesh = selection.split('.')[0]
-        out_data = [selection_mesh, vtx_pos_list]
+        out_data = [selection_mesh, pos_list]
         
         return out_data
    
     def get_vector_direction(self, vtx_pos):
 
-        pos_one = vtx_pos[0]
-        pos_two = vtx_pos[1]
+        if vtx_pos[0][0] <= vtx_pos[1][0]:
+            pos_one = vtx_pos[0]
+            pos_two = vtx_pos[1]
+        
+        elif vtx_pos[0][0] >= vtx_pos[1][0]:
+            pos_one = vtx_pos[1]
+            pos_two = vtx_pos[0]
         x_zero, y_zero, z_zero = (pos_one[0] - pos_two[0]) ** 2, (pos_one[1] - pos_two[1]) ** 2, (pos_one[2] - pos_two[2]) ** 2
         
         vector_magnitude = math.sqrt(x_zero + z_zero)
         vector_direction = math.degrees(math.asin((math.sqrt(z_zero)/vector_magnitude)))
         rounded_direction = round(vector_direction, 3)
-    
-        return rounded_direction
         
-    def button_one_clicked(self):
+        if str(rounded_direction).split('.')[0] == '001':
+            rounded_direction = round(rounded_direction, 2)
+        
+        elif str(rounded_direction).split('.')[1] == '999':
+            rounded_direction = round(rounded_direction, 2)
+        
+        elif rounded_direction > 45:
+            rounded_direction = 90-rounded_direction
+        
+        elif pos_one[2] < pos_two[2]:
+            rounded_direction = -rounded_direction
+        
+        elif pos_one[0] == pos_two[0] or pos_one[2] == pos_two[2]:
+            rounded_direction = 'same'
+         
+        return rounded_direction
+
+    def is_list_one_selected(self):
+        if self.list_one.selectedItems():
+            self.realign_asset_button.setEnabled(True)
+        else:
+            self.realign_asset_button.setEnabled(False)
+
+    def retransform_asset_button_clicked(self):
         
         # Prechecks
         length_passed = self.check_selection_length(len(mc.ls(sl=True)), 1)
         if not length_passed:
             return
-        component_passed = self.check_selection_components('face', mc.ls(sl=True))
-        if not component_passed:
+        component_passed = self.check_selection_components('face', mc.ls(sl=True), absolute=True)
+
+        if not component_passed or component_passed == 'non_component':
+            mc.warning("Please select a face.")
             return
-        
+    
         # Retransform object
         face_sel = self.reset_frozen_asset()
-      
+    
         # Put edges of selected face in our list
         self.list_one.clear()
         components = self.get_selection_components(face_sel, 'face', 'edge')
         self.append_items_to_list(self.list_one, components)
-        
-    def button_two_clicked(self):
 
+        # if self.list_one.count() > 0:
+        #     self.realign_asset_button.setEnabled(True)
+        
+        # elif self.list_one.count() == 0:
+        #     self.realign_asset_button.setEnabled(False)
+            
+    def realign_asset_button_clicked(self):
+
+        # Prechecks
+        
+        component_passed = self.check_selection_components('edge', self.list_one.selectedItems()[0].text(), absolute=True)
+        if not component_passed or component_passed == 'non_component':
+            mc.warning("Please select an edge")
+            return
+        
         selected_item = self.list_one.selectedItems()[0].text()
         obj_of_item = selected_item.split('.')[0]
-        vtx_positions = self.convert_selection_to_vtx(selected_item)
+        mc.warning('')
+
+        vtx_positions = self.convert_selection_to_components(selected_item, 'vtx')
         vector_direction = self.get_vector_direction(vtx_positions[1])
-        print(vector_direction)
-        if vector_direction > 45:
+        
+        if vector_direction == 'same':
+            mc.warning(f"{selected_item} is already aligned.")
+            return
+
+        elif vector_direction > 45:
             mc.xform(obj_of_item, ro=[0,-vector_direction,0])
-        if vector_direction < 45:
+            
+        elif vector_direction < 45:
             mc.xform(obj_of_item, ro=[0,vector_direction,0])
         
-        mc.makeIdentity(obj_sel, apply=True, t=1, r=1, s=1, n=0)
+        mc.makeIdentity(obj_of_item, apply=True, t=1, r=1, s=1, n=0)
         return
         
-    def button_three_clicked(self):
+    def rotate_ninety_button_clicked(self):
         cur_sel = mc.ls(sl=True)[0]
         if '.' in cur_sel:
             mc.select(cl=True)
@@ -294,7 +371,14 @@ class GlassesTools(QMainWindow, QWidget):
         mc.makeIdentity(cur_sel, apply=True, t=1, r=1, s=1, n=0)
         
         return
-            
+    
+    def center_selection_button_clicked(self):
+        sel_type = self.check_selection_components(components=mc.ls(sl=True))
+        if sel_type == 'non_component':
+            mc.warning("Please select a vtx, edge, or face.")
+            return
+        print(sel_type)
+        # self.center_selection()
 
 window = GlassesTools()
 window.show()
@@ -303,3 +387,4 @@ window.show()
 # window = GlassesTools()
 # window.show()
 # app.exec_()
+
