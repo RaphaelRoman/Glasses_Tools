@@ -36,7 +36,7 @@ class GlassesTools(QMainWindow, QWidget):
         self.master_widget = QWidget()
         self.master_layout = QHBoxLayout(self.master_widget)
         self.timer = QTimer(self)
-        self.timer.timeout.connect(self.check_selection)
+        self.timer.timeout.connect(self.is_list_one_selected)
         self.timer.start(10)
 
 
