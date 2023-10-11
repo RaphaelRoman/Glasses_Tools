@@ -73,85 +73,154 @@ class GlassesTools(QMainWindow, QWidget):
         self.layout_one.addSpacing(50)
 
         # Layout two
-        self.dial_dummy_one = QWidget()
-        self.dial_dummy_two = QWidget()
-        self.dial_dummy_three = QWidget()
 
         self.layout_two = QVBoxLayout()
-        self.horizontal_one = QHBoxLayout(self.dial_dummy_one)
-        self.horizontal_two = QHBoxLayout(self.dial_dummy_two)
-        self.horizontal_three = QHBoxLayout(self.dial_dummy_three)
-        self.layout_two.addLayout(self.horizontal_one)
         self.master_layout.addLayout(self.layout_two)
+        self.horizontal_dummy_one = QWidget()
+        self.horizontal_dummy_two = QWidget()
+        self.horizontal_dummy_three = QWidget()
+        self.horizontal_one = QHBoxLayout(self.horizontal_dummy_one)
+        self.horizontal_two = QHBoxLayout(self.horizontal_dummy_two)
+        self.horizontal_three = QHBoxLayout(self.horizontal_dummy_three)
 
+        self.variable_list = self.make_variables_for_instancing('vertical_dummy', 3)
+        for self.var in self.variable_list:
+            self.widget = QWidget()
+            self.var = QVBoxLayout(self.widget)
+            self.horizontal_one.addWidget(self.widget)
+
+            self.dial = QDial()
+            self.dial.setNotchesVisible(True)
+            self.dial.setRange(1,100)
+            self.dial.setValue(50)
+
+            self.button = QPushButton("Test")
+
+            self.var.addWidget(self.dial)
+            self.var.addWidget(self.button)
+
+        self.variable_list = self.make_variables_for_instancing('vertical_dummy', 3)
+        for self.var in self.variable_list:
+            self.widget = QWidget()
+            self.var = QVBoxLayout(self.widget)
+            self.horizontal_two.addWidget(self.widget)
+
+            self.dial = QDial()
+            self.dial.setNotchesVisible(True)
+            self.dial.setRange(1,100)
+            self.dial.setValue(50)
+
+            self.button = QPushButton("Test")
+
+            self.var.addWidget(self.dial)
+            self.var.addWidget(self.button)
+
+        self.variable_list = self.make_variables_for_instancing('vertical_dummy', 3)
+        for self.var in self.variable_list:
+            self.widget = QWidget()
+            self.var = QVBoxLayout(self.widget)
+            self.horizontal_three.addWidget(self.widget)
+
+            self.dial = QDial()
+            self.dial.setNotchesVisible(True)
+            self.dial.setRange(1,100)
+            self.dial.setValue(50)
+
+            self.button = QPushButton("Test")
+
+            self.var.addWidget(self.dial)
+            self.var.addWidget(self.button)
 
         self.button_four = QPushButton("Button Four")
         self.button_five = QPushButton("Button Five")
 
         self.list_two = QListWidget()
         self.list_two.SelectionMode(1)
-        
-        self.dial_one = QDial()
-        self.dial_one.setNotchesVisible(True)
-        self.dial_one.setRange(1,100)
-        self.dial_one.setValue(50)
-        self.dial_two = QDial()
-        self.dial_two.setNotchesVisible(True)
-        self.dial_two.setRange(1,100)
-        self.dial_two.setValue(50)
-        self.dial_three = QDial()
-        self.dial_three.setNotchesVisible(True)
-        self.dial_three.setRange(1,100)
-        self.dial_three.setValue(50)
-        self.dial_four = QDial()
-        self.dial_four.setNotchesVisible(True)
-        self.dial_four.setRange(1,100)
-        self.dial_four.setValue(50)
-        self.dial_five = QDial()
-        self.dial_five.setNotchesVisible(True)
-        self.dial_five.setRange(1,100)
-        self.dial_five.setValue(50)
-        self.dial_six = QDial()
-        self.dial_six.setNotchesVisible(True)
-        self.dial_six.setRange(1,100)
-        self.dial_six.setValue(50)
-        self.dial_seven = QDial()
-        self.dial_seven.setNotchesVisible(True)
-        self.dial_seven.setRange(1,100)
-        self.dial_seven.setValue(50)
-        self.dial_eight = QDial()
-        self.dial_eight.setNotchesVisible(True)
-        self.dial_eight.setRange(1,100)
-        self.dial_eight.setValue(50)
-        self.dial_nine= QDial()
-        self.dial_nine.setNotchesVisible(True)
-        self.dial_nine.setRange(1,100)
-        self.dial_nine.setValue(50)
-        
 
         self.layout_two.addWidget(self.list_two)
-        self.horizontal_one.addWidget(self.dial_one)
-        self.horizontal_one.addWidget(self.dial_two)
-        self.horizontal_one.addWidget(self.dial_three)
-        self.horizontal_two.addWidget(self.dial_four)
-        self.horizontal_two.addWidget(self.dial_five)
-        self.horizontal_two.addWidget(self.dial_six)
-        self.horizontal_three.addWidget(self.dial_seven)
-        self.horizontal_three.addWidget(self.dial_eight)
-        self.horizontal_three.addWidget(self.dial_nine)
-        self.layout_two.addWidget(self.dial_dummy_one)
-        self.layout_two.addWidget(self.dial_dummy_two)
-        self.layout_two.addWidget(self.dial_dummy_three)
+        self.layout_two.addWidget(self.horizontal_dummy_one)
+        self.layout_two.addWidget(self.horizontal_dummy_two)
+        self.layout_two.addWidget(self.horizontal_dummy_three)
         self.layout_two.addWidget(self.button_four)
         self.layout_two.addWidget(self.button_five)
 
-        # Parenting widgets
+       # Parenting widgets
         self.master_layout.setStretchFactor(self.layout_one, 1)
         self.master_layout.setStretchFactor(self.layout_two, 5)        
         self.setCentralWidget(self.master_widget)
         self.setLayout(self.master_layout)
 
     # Funcs
+    def make_variables_for_instancing(self, name, num_instances):
+        variable_list = []
+        ones = {1:'one', 2:'two', 3:'three', 
+                4:'four', 5:'five', 6:'six', 
+                7:'seven', 8:'eight', 9:'nine'}
+
+        special = { 10:'ten', 11:'eleven', 12:'twelve',
+                    13:'thirteen', 14:'fourteen', 15:'fifteen',
+                    16:'sixteen', 17:'seventeen', 18:'eighteen',
+                    19:'nineteen'}
+
+        tens = {2:'twenty', 3:'thirty', 4:'forty', 
+                5:'fifty', 6:'sixty', 7:'seventy', 
+                8:'eighty', 9:'ninety'}
+            
+        def int_to_word(integer):
+            int_place = ''
+            if num_instances == 0:
+                print("Cannot make zero instances. Zero instances made.")
+                return int_place
+            
+            elif num_instances > 99:
+                print("Cannot make more than 99 instances. Zero instances made")
+                return int_place
+
+            elif num_instances < 10:
+                int_place = 'ones'
+
+            elif num_instances >= 10 and num_instances <= 100:
+                int_place = 'tens'
+
+            return int_place
+        
+        int_place = int_to_word(num_instances)
+        if not int_place:
+            return
+
+        for num in range(1, num_instances+1):
+            if int_place == 'ones':
+                cur_instance = f"{name}_{ones[num]}"
+        
+            if int_place == 'tens':
+                if num < 10:
+                    cur_instance = f"{name}_{ones[num]}"
+                
+                elif 10 <= num <= 19:
+                    cur_instance = f"{name}_{special[num]}"
+
+                elif num >= 20:
+                    if (num == 20 or
+                        num == 30 or
+                        num == 40 or
+                        num == 50 or
+                        num == 60 or
+                        num == 70 or
+                        num == 80 or
+                        num == 90
+                        ):
+                        cur_instance = f"{name}_{tens[int(str(num)[0])]}"
+                    
+                    else:
+                        cur_instance = f"{name}_{tens[int(str(num)[0])]}_{ones[int(str(num)[1])]}"
+
+            if cur_instance not in variable_list:
+                variable_list.append(cur_instance)
+
+                
+        print(variable_list)
+        return variable_list
+
     def append_items_to_list(self, list_widget, items):
         for item in items:
             list_widget.addItem(item)
