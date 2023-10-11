@@ -12,6 +12,7 @@ from PySide2.QtWidgets import (
     QApplication, 
     QMainWindow, 
     QWidget,
+    QSizePolicy,
     QDockWidget,
     QHBoxLayout,
     QVBoxLayout, 
@@ -20,7 +21,7 @@ from PySide2.QtWidgets import (
     QDial
 )
 
-from PySide2.QtGui import QPalette, QColor
+from PySide2.QtGui import QPalette, QColor, QFont, QFontMetrics
 
 class GlassesTools(QMainWindow, QWidget):
     def __init__(self):
@@ -31,7 +32,7 @@ class GlassesTools(QMainWindow, QWidget):
         self.setWindowTitle(self.window_name)
         self.setFixedSize(QSize(800,600))
         self.setMinimumSize(QSize(600,400))
-        self.setMaximumSize(QSize(800,600))
+        self.setMaximumSize(QSize(1200,800))
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
 
         # Make sure only one window
@@ -87,14 +88,25 @@ class GlassesTools(QMainWindow, QWidget):
         for self.var in self.variable_list:
             self.widget = QWidget()
             self.var = QVBoxLayout(self.widget)
+            self.var.setAlignment(Qt.AlignCenter)
             self.horizontal_one.addWidget(self.widget)
 
             self.dial = QDial()
+            self.dial.setNotchTarget(0.0)
             self.dial.setNotchesVisible(True)
-            self.dial.setRange(1,100)
+            self.dial.setRange(1,20)
             self.dial.setValue(50)
 
             self.button = QPushButton("Test")
+            self.button.setFixedSize(50,50)
+            self.button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+            # self.font = self.button.font()
+            # self.font_metrics = QFontMetrics(self.font)
+            # self.font_width = self.font_metrics.width(self.button.text())
+            # self.font_height = self.font_metrics.height()
+            # self.button.setMinimumSize(self.font_width, self.font_height)
+            # self.button.setMaximumSize(self.font_width*2, self.font_height*2)
+            # self.button.adjustSize()
 
             self.var.addWidget(self.dial)
             self.var.addWidget(self.button)
@@ -137,10 +149,10 @@ class GlassesTools(QMainWindow, QWidget):
         self.list_two = QListWidget()
         self.list_two.SelectionMode(1)
 
-        self.layout_two.addWidget(self.list_two)
         self.layout_two.addWidget(self.horizontal_dummy_one)
         self.layout_two.addWidget(self.horizontal_dummy_two)
         self.layout_two.addWidget(self.horizontal_dummy_three)
+        self.layout_two.addWidget(self.list_two)
         self.layout_two.addWidget(self.button_four)
         self.layout_two.addWidget(self.button_five)
 
