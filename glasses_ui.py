@@ -16,7 +16,8 @@ from PySide2.QtWidgets import (
     QHBoxLayout,
     QVBoxLayout, 
     QPushButton,
-    QListWidget
+    QListWidget,
+    QDial
 )
 
 from PySide2.QtGui import QPalette, QColor
@@ -26,11 +27,16 @@ class GlassesTools(QMainWindow, QWidget):
         super().__init__()
 
         # Naming and Sizing
-        self.setWindowTitle("Glasses Tools")
+        self.window_name = "Glasses Tools"
+        self.setWindowTitle(self.window_name)
         self.setFixedSize(QSize(800,600))
         self.setMinimumSize(QSize(600,400))
         self.setMaximumSize(QSize(800,600))
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
+
+        # Make sure only one window
+        if mc.window(self.window_name, ex = True):
+            mc.deleteUI(self.window_name)
 
         # Initial setup
         self.master_widget = QWidget()
@@ -67,17 +73,73 @@ class GlassesTools(QMainWindow, QWidget):
         self.layout_one.addSpacing(50)
 
         # Layout two
+        self.dial_dummy_one = QWidget()
+        self.dial_dummy_two = QWidget()
+        self.dial_dummy_three = QWidget()
+
         self.layout_two = QVBoxLayout()
+        self.horizontal_one = QHBoxLayout(self.dial_dummy_one)
+        self.horizontal_two = QHBoxLayout(self.dial_dummy_two)
+        self.horizontal_three = QHBoxLayout(self.dial_dummy_three)
+        self.layout_two.addLayout(self.horizontal_one)
         self.master_layout.addLayout(self.layout_two)
+
 
         self.button_four = QPushButton("Button Four")
         self.button_five = QPushButton("Button Five")
 
         self.list_two = QListWidget()
         self.list_two.SelectionMode(1)
-        # names = ['rileigh', 'jeremy', 'conner']
+        
+        self.dial_one = QDial()
+        self.dial_one.setNotchesVisible(True)
+        self.dial_one.setRange(1,100)
+        self.dial_one.setValue(50)
+        self.dial_two = QDial()
+        self.dial_two.setNotchesVisible(True)
+        self.dial_two.setRange(1,100)
+        self.dial_two.setValue(50)
+        self.dial_three = QDial()
+        self.dial_three.setNotchesVisible(True)
+        self.dial_three.setRange(1,100)
+        self.dial_three.setValue(50)
+        self.dial_four = QDial()
+        self.dial_four.setNotchesVisible(True)
+        self.dial_four.setRange(1,100)
+        self.dial_four.setValue(50)
+        self.dial_five = QDial()
+        self.dial_five.setNotchesVisible(True)
+        self.dial_five.setRange(1,100)
+        self.dial_five.setValue(50)
+        self.dial_six = QDial()
+        self.dial_six.setNotchesVisible(True)
+        self.dial_six.setRange(1,100)
+        self.dial_six.setValue(50)
+        self.dial_seven = QDial()
+        self.dial_seven.setNotchesVisible(True)
+        self.dial_seven.setRange(1,100)
+        self.dial_seven.setValue(50)
+        self.dial_eight = QDial()
+        self.dial_eight.setNotchesVisible(True)
+        self.dial_eight.setRange(1,100)
+        self.dial_eight.setValue(50)
+        self.dial_nine= QDial()
+        self.dial_nine.setNotchesVisible(True)
+        self.dial_nine.setRange(1,100)
+        self.dial_nine.setValue(50)
+        
 
         self.layout_two.addWidget(self.list_two)
+        self.horizontal_one.addWidget(self.dial_one)
+        self.horizontal_one.addWidget(self.dial_two)
+        self.horizontal_one.addWidget(self.dial_three)
+        self.horizontal_two.addWidget(self.dial_four)
+        self.horizontal_two.addWidget(self.dial_five)
+        self.horizontal_two.addWidget(self.dial_six)
+        self.horizontal_three.addWidget(self.dial_seven)
+        self.horizontal_three.addWidget(self.dial_eight)
+        self.horizontal_three.addWidget(self.dial_nine)
+        self.layout_two.addWidget(self.dial_dummy_one)
         self.layout_two.addWidget(self.button_four)
         self.layout_two.addWidget(self.button_five)
 
@@ -94,10 +156,11 @@ class GlassesTools(QMainWindow, QWidget):
     
     def check_selection_length(self, selection_length, value, range=[], check_range=False):
         check_passed = True
-
+        
+        # add type to mc.warning
         if selection_length == 0:
             check_passed = False
-            mc.warning("Cannot have empty selection. Please select a face.")
+            mc.warning("Cannot have empty selection. Please select something.")
             return check_passed
  
         if check_range:
@@ -371,9 +434,6 @@ class GlassesTools(QMainWindow, QWidget):
                   math.isclose(vtx_one_pos[2], vtx_two_pos[2], abs_tol = 0.0011)):
                 break
 
-            print(vtx_one_pos)
-            print(vtx_two_pos)
-                
         mc.makeIdentity(obj_of_item, apply=True, t=1, r=1, s=1, n=0)
         return
         
@@ -388,25 +448,45 @@ class GlassesTools(QMainWindow, QWidget):
         mc.move(0,0,0, f'{cur_sel}.scalePivot', f'{cur_sel}.rotatePivot', a=True)
         mc.manipPivot(o=[0,0,0])
         mc.xform(cur_sel, ro=[0,cur_rot + 90,0])
-        mc.makeIdentity(cur_sel, apply=True, t=1, r=1, s=1, n=0)
         
+        mc.makeIdentity(cur_sel, apply=True, t=1, r=1, s=1, n=0)
         return
     
     def center_selection_button_clicked(self):
-        sel_type = self.check_selection_components(components=mc.ls(sl=True))
+        cur_sel = mc.ls(sl=True)
+        sel_type = self.check_selection_components(components=cur_sel)
+
+        
+        if not self.check_selection_length(len(cur_sel), 1):
+            return
+
         if sel_type == 'non_component':
             mc.warning("Please select a vtx, edge, or face.")
             return
-        print(sel_type)
-        # self.center_selection()
+        
+        cur_obj = cur_sel[0].split('.')[0]
+        obj_pos = mc.xform(cur_obj, t=True, q=True)
+        
+        if sel_type == 'vtx':
+            mc.makeIdentity(cur_obj, apply=True, t=1, r=1, s=1, n=0)
+            cur_pos = mc.xform(cur_sel[0], t=True, q=True)
+            mc.xform(cur_obj, t=[-cur_pos[0], obj_pos[1], -cur_pos[2]])
 
-window = GlassesTools()
-window.show()
+        if sel_type == 'edge':
+            pass
+        
+        if sel_type == 'face':
+            pass
+        
+        mc.makeIdentity(obj_of_item, apply=True, t=1, r=1, s=1, n=0)
+        return
 
-# app = QApplication(sys.argv)
-# window = GlassesTools()
-# window.show()
-# app.exec_()
+if __name__ == '__main__':
+    window = GlassesTools()
+    window.show()
 
-
-
+    # app = QApplication(sys.argv)
+    # window = GlassesTools()
+    # window.show()
+    # app.exec_()
+    
