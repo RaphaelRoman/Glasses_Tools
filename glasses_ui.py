@@ -140,6 +140,8 @@ class GlassesTools(QMainWindow, QWidget):
         self.horizontal_three.addWidget(self.dial_eight)
         self.horizontal_three.addWidget(self.dial_nine)
         self.layout_two.addWidget(self.dial_dummy_one)
+        self.layout_two.addWidget(self.dial_dummy_two)
+        self.layout_two.addWidget(self.dial_dummy_three)
         self.layout_two.addWidget(self.button_four)
         self.layout_two.addWidget(self.button_five)
 
