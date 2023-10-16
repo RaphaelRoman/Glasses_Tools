@@ -20,17 +20,13 @@ from PySide2.QtWidgets import (
     QDial
 )
 
-
-
 from PySide2.QtGui import QPalette, QColor, QFont, QFontMetrics
-
-class CustomChanges(QSlider):
-    def __init__(self, orientation):
-        super().__init__(orientation)
-
-    def snap_slider(self, change):
-        if change == QSlider.SliderValueChange:
-
+import maya.cmds as mc
+import maya.mel as mel
+import math
+sys.path.append("P:\Glasses\Preproduction\Glasses_Tools\scripts")
+from glasses_tools import glasses_utils as glutils
+from glasses_tools import glasses_widget_functions as glwidgetfuncs
 
 class GlassesTools(QMainWindow, QWidget):
     def __init__(self):
@@ -75,12 +71,12 @@ class GlassesTools(QMainWindow, QWidget):
         self.realign_asset_button.clicked.connect(self.realign_asset_button_clicked)
         self.rotate_ninety_button.clicked.connect(self.rotate_ninety_button_clicked)
         
-        self.list_one = QListWidget()
-        self.list_one.SelectionMode(1)
+        self.edges_list = QListWidget()
+        self.edges_list.SelectionMode(1)
         
         self.tab_one_layout_one.addSpacing(10)
         self.tab_one_layout_one.addWidget(self.retransform_asset_button)
-        self.tab_one_layout_one.addWidget(self.list_one)
+        self.tab_one_layout_one.addWidget(self.edges_list)
         self.tab_one_layout_one.addWidget(self.center_selection_button)
         self.tab_one_layout_one.addWidget(self.realign_asset_button)
         self.tab_one_layout_one.addWidget(self.rotate_ninety_button)
@@ -96,7 +92,7 @@ class GlassesTools(QMainWindow, QWidget):
         self.horizontal_two = QHBoxLayout(self.horizontal_dummy_two)
         self.horizontal_three = QHBoxLayout(self.horizontal_dummy_three)
 
-        self.variable_list = self.make_variables_for_instancing('vertical_dummy', 3)
+        self.variable_list = glutils.make_variables_for_instancing('vertical_dummy', 3)
         for self.var in self.variable_list:
             self.widget = QWidget()
             self.var = QVBoxLayout(self.widget)
@@ -128,7 +124,7 @@ class GlassesTools(QMainWindow, QWidget):
             self.var.addWidget(self.dial)
             self.var.addWidget(self.slider)
 
-        self.variable_list = self.make_variables_for_instancing('vertical_dummy', 3)
+        self.variable_list = glutils.make_variables_for_instancing('vertical_dummy', 3)
         for self.var in self.variable_list:
             self.widget = QWidget()
             self.var = QVBoxLayout(self.widget)
@@ -144,7 +140,7 @@ class GlassesTools(QMainWindow, QWidget):
             self.var.addWidget(self.dial)
             self.var.addWidget(self.button)
 
-        self.variable_list = self.make_variables_for_instancing('vertical_dummy', 3)
+        self.variable_list = glutils.make_variables_for_instancing('vertical_dummy', 3)
         for self.var in self.variable_list:
             self.widget = QWidget()
             self.var = QVBoxLayout(self.widget)
@@ -163,22 +159,15 @@ class GlassesTools(QMainWindow, QWidget):
         self.button_four = QPushButton("Button Four")
         self.button_five = QPushButton("Button Five")
 
-        # self.list_two = QListWidget()
-        # self.list_two.SelectionMode(1)
-
         self.tab_one_layout_two.addWidget(self.horizontal_dummy_one)
         self.tab_one_layout_two.addWidget(self.horizontal_dummy_two)
         self.tab_one_layout_two.addWidget(self.horizontal_dummy_three)
-        # self.tab_one_layout_two.addWidget(self.list_two)
-        # self.tab_one_layout_two.addWidget(self.button_four)
-        # self.tab_one_layout_two.addWidget(self.button_five)
 
         # Tab two
         self.tab_two_widget = QWidget()
         self.master_tab_two_layout = QHBoxLayout(self.tab_two_widget)
-        
 
-        # Parenting widgets
+        # Parening
         self.master_tab.addTab(self.tab_one_widget, "Asset Adjust")
         self.master_tab.addTab(self.tab_two_widget, "Pack and Ship")
         self.master_tab_one_layout.setStretchFactor(self.tab_one_layout_one, 1)
@@ -188,139 +177,31 @@ class GlassesTools(QMainWindow, QWidget):
 
     # Funcs
     def is_list_one_selected(self):
-        if self.list_one.selectedItems():
+        if self.edges_list.selectedItems():
             self.realign_asset_button.setEnabled(True)
         else:
             self.realign_asset_button.setEnabled(False)
 
     def retransform_asset_button_clicked(self):
-        
-        # Prechecks
-        length_passed = self.check_selection_length(len(mc.ls(sl=True)), 1)
-        if not length_passed:
-            return
-        component_passed = self.check_selection_components(mc.ls(sl=True), 'face', absolute=True)
-
-        if not component_passed or component_passed == 'non_component':
-            mc.warning("Please select a face.")
-            return
-    
-        # Retransform object
-        face_sel = self.reset_frozen_asset()
-    
-        # Put edges of selected face in our list
-        self.list_one.clear()
-        components = self.get_selection_components(face_sel, 'face', 'edge')
-        self.append_items_to_list(self.list_one, components)
-
-        # if self.list_one.count() > 0:
-        #     self.realign_asset_button.setEnabled(True)
-        
-        # elif self.list_one.count() == 0:
-        #     self.realign_asset_button.setEnabled(False)
-            
-    def realign_asset_button_clicked(self):
-
-        # Prechecks
-        component_passed = self.check_selection_components(self.list_one.selectedItems()[0].text(), 'edge', absolute=True)
-        if not component_passed or component_passed == 'non_component':
-            mc.warning("Please select an edge")
-            return
-        
-        selected_item = self.list_one.selectedItems()[0].text()
-        obj_of_item = selected_item.split('.')[0]
-
-        vtx_positions = self.convert_selection_to_components(selected_item, 'vtx')
-        vector_direction = self.get_vector_direction(vtx_positions[2])
-
-        if vector_direction == 'same':
-            mc.warning(f"{selected_item} is already aligned.")
-            return
-
-        if (math.isclose(vtx_positions[2][0][0], vtx_positions[2][1][0], abs_tol = 0.0011) or 
-            math.isclose(vtx_positions[2][0][2], vtx_positions[2][1][2], abs_tol = 0.0011)):
-            mc.warning(f"{selected_item} is already aligned.")
-            return
-
-        while True:
-            obj_rot = mc.xform(obj_of_item, ro=True, q=True)[1]
-            mc.xform(obj_of_item, ro=[0,obj_rot-vector_direction,0])
-
-            vtx_one_pos = mc.xform(vtx_positions[1][0], t=True, ws=True, q=True)
-            for pos in vtx_one_pos:
-                vtx_one_pos[vtx_one_pos.index(pos)] = round(pos, 3)
-    
-            vtx_two_pos = mc.xform(vtx_positions[1][1], t=True, ws=True, q=True)
-            for pos in vtx_two_pos:
-                vtx_two_pos[vtx_two_pos.index(pos)] = round(pos, 3)
-            
-            if vtx_one_pos[0] == vtx_two_pos[0] or vtx_one_pos[2] == vtx_two_pos[2]:
-                break
-
-            elif (math.isclose(vtx_one_pos[0], vtx_two_pos[0], abs_tol = 0.0011) or 
-                  math.isclose(vtx_one_pos[2], vtx_two_pos[2], abs_tol = 0.0011)):
-                break
-
-        mc.makeIdentity(obj_of_item, apply=True, t=1, r=1, s=1, n=0)
-        return
-        
-    def rotate_ninety_button_clicked(self):
-        cur_sel = mc.ls(sl=True)[0]
-        if '.' in cur_sel:
-            mc.select(cl=True)
-            mc.select(cur_sel.split('.'))[0]
-            cur_sel = mc.ls(sl=True)[0]
-            
-        cur_rot = mc.xform(cur_sel, ro=True, q=True)[1]            
-        mc.move(0,0,0, f'{cur_sel}.scalePivot', f'{cur_sel}.rotatePivot', a=True)
-        mc.manipPivot(o=[0,0,0])
-        mc.xform(cur_sel, ro=[0,cur_rot + 90,0])
-        
-        mc.makeIdentity(cur_sel, apply=True, t=1, r=1, s=1, n=0)
-        return
-    
-    def center_selection_button_clicked(self):
         cur_sel = mc.ls(sl=True)
-        sel_type = check_selection_components(components=cur_sel)
+        glwidgetfuncs.retransform_asset(cur_sel, self.edges_list)  
 
-        
-        if not check_selection_length(len(cur_sel), 1):
-            return
+    def center_selection_button_clicked(self):
+        pass
 
-        if sel_type == 'non_component':
-            mc.warning("Please select a vtx, edge, or face.")
-            return
-        
-        cur_obj = cur_sel[0].split('.')[0]
-        obj_pos = mc.xform(cur_obj, t=True, q=True)
-        
-        if sel_type == 'vtx':
-            mc.makeIdentity(cur_obj, apply=True, t=1, r=1, s=1, n=0)
-            cur_pos = mc.xform(cur_sel[0], t=True, q=True)
-            mc.xform(cur_obj, t=[-cur_pos[0], obj_pos[1], -cur_pos[2]])
+    def realign_asset_button_clicked(self):
+        pass
 
-        if sel_type == 'edge':
-            pass
-        
-        if sel_type == 'face':
-            pass
-        
-        mc.makeIdentity(cur_obj, apply=True, t=1, r=1, s=1, n=0)
-        return
+    def rotate_ninety_button_clicked(self):
+        pass
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:
         window.close()
         window.deleteLater()
+
     except:
         pass
 
     window = GlassesTools()
     window.show()
-
-    # app = QApplication(sys.argv)
-    # window = GlassesTools()
-    # window.show()
-    # app.exec_()
-    
-
