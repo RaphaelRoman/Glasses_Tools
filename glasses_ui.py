@@ -18,10 +18,20 @@ from PySide2.QtWidgets import (
     QVBoxLayout, 
     QPushButton,
     QListWidget,
+    QTabWidget,
+    QSlider,
     QDial
 )
 
 from PySide2.QtGui import QPalette, QColor, QFont, QFontMetrics
+
+class CustomChanges(QSlider):
+    def __init__(self, orientation):
+        super().__init__(orientation)
+
+    def snap_slider(self, change):
+        if change == QSlider.SliderValueChange:
+
 
 class GlassesTools(QMainWindow, QWidget):
     def __init__(self):
@@ -31,7 +41,7 @@ class GlassesTools(QMainWindow, QWidget):
         self.window_name = "Glasses Tools"
         self.setWindowTitle(self.window_name)
         self.setFixedSize(QSize(800,600))
-        self.setMinimumSize(QSize(600,400))
+        self.setMinimumSize(QSize(800,600))
         self.setMaximumSize(QSize(1200,800))
         self.setWindowFlags(Qt.WindowStaysOnTopHint)
 
@@ -42,15 +52,19 @@ class GlassesTools(QMainWindow, QWidget):
         # Initial setup
         self.master_widget = QWidget()
         self.master_layout = QHBoxLayout(self.master_widget)
+        self.master_tab = QTabWidget()
+        self.master_layout.addWidget(self.master_tab)
         self.timer = QTimer(self)
         self.timer.timeout.connect(self.is_list_one_selected)
         self.timer.start(10)
 
-
-        # Layout one
-        self.layout_one = QVBoxLayout()
-        self.master_layout.addLayout(self.layout_one)
-        
+        # Tab one
+        self.tab_one_widget = QWidget()
+        self.master_tab_one_layout = QHBoxLayout(self.tab_one_widget)
+    
+        # Tab one, layout one
+        self.tab_one_layout_one = QVBoxLayout(self.tab_one_widget)
+        self.master_tab_one_layout.addLayout(self.tab_one_layout_one)
         self.retransform_asset_button = QPushButton("Retransform Asset")
         self.center_selection_button = QPushButton("Center Selection")
         self.realign_asset_button = QPushButton("Realign Asset")
@@ -65,18 +79,17 @@ class GlassesTools(QMainWindow, QWidget):
         self.list_one = QListWidget()
         self.list_one.SelectionMode(1)
         
-        self.layout_one.addSpacing(10)
-        self.layout_one.addWidget(self.retransform_asset_button)
-        self.layout_one.addWidget(self.list_one)
-        self.layout_one.addWidget(self.center_selection_button)
-        self.layout_one.addWidget(self.realign_asset_button)
-        self.layout_one.addWidget(self.rotate_ninety_button)
-        self.layout_one.addSpacing(50)
+        self.tab_one_layout_one.addSpacing(10)
+        self.tab_one_layout_one.addWidget(self.retransform_asset_button)
+        self.tab_one_layout_one.addWidget(self.list_one)
+        self.tab_one_layout_one.addWidget(self.center_selection_button)
+        self.tab_one_layout_one.addWidget(self.realign_asset_button)
+        self.tab_one_layout_one.addWidget(self.rotate_ninety_button)
+        self.tab_one_layout_one.addSpacing(50)
 
-        # Layout two
-
-        self.layout_two = QVBoxLayout()
-        self.master_layout.addLayout(self.layout_two)
+        # Tab one, layout two
+        self.tab_one_layout_two = QVBoxLayout()
+        self.master_tab_one_layout.addLayout(self.tab_one_layout_two)
         self.horizontal_dummy_one = QWidget()
         self.horizontal_dummy_two = QWidget()
         self.horizontal_dummy_three = QWidget()
@@ -88,7 +101,7 @@ class GlassesTools(QMainWindow, QWidget):
         for self.var in self.variable_list:
             self.widget = QWidget()
             self.var = QVBoxLayout(self.widget)
-            self.var.setAlignment(Qt.AlignCenter)
+            # self.var.setAlignment(Qt.AlignCenter)
             self.horizontal_one.addWidget(self.widget)
 
             self.dial = QDial()
@@ -97,9 +110,14 @@ class GlassesTools(QMainWindow, QWidget):
             self.dial.setRange(1,20)
             self.dial.setValue(50)
 
-            self.button = QPushButton("Test")
-            self.button.setFixedSize(50,50)
-            self.button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+            self.slider = QSlider(Qt.Horizontal)
+            self.slider.setMinimum(0)
+            self.slider.setMaximum(100)
+            self.slider.setValue(20)
+            self.slider.setTickPosition(QSlider.TicksBelow)
+            self.slider.setTickInterval(100)
+            # self.button.setFixedSize(50,50)z
+            # self.button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
             # self.font = self.button.font()
             # self.font_metrics = QFontMetrics(self.font)
             # self.font_width = self.font_metrics.width(self.button.text())
@@ -109,7 +127,7 @@ class GlassesTools(QMainWindow, QWidget):
             # self.button.adjustSize()
 
             self.var.addWidget(self.dial)
-            self.var.addWidget(self.button)
+            self.var.addWidget(self.slider)
 
         self.variable_list = self.make_variables_for_instancing('vertical_dummy', 3)
         for self.var in self.variable_list:
@@ -119,7 +137,7 @@ class GlassesTools(QMainWindow, QWidget):
 
             self.dial = QDial()
             self.dial.setNotchesVisible(True)
-            self.dial.setRange(1,100)
+            self.dial.setRange(1,20)
             self.dial.setValue(50)
 
             self.button = QPushButton("Test")
@@ -135,7 +153,7 @@ class GlassesTools(QMainWindow, QWidget):
 
             self.dial = QDial()
             self.dial.setNotchesVisible(True)
-            self.dial.setRange(1,100)
+            self.dial.setRange(1,20)
             self.dial.setValue(50)
 
             self.button = QPushButton("Test")
@@ -146,19 +164,26 @@ class GlassesTools(QMainWindow, QWidget):
         self.button_four = QPushButton("Button Four")
         self.button_five = QPushButton("Button Five")
 
-        self.list_two = QListWidget()
-        self.list_two.SelectionMode(1)
+        # self.list_two = QListWidget()
+        # self.list_two.SelectionMode(1)
 
-        self.layout_two.addWidget(self.horizontal_dummy_one)
-        self.layout_two.addWidget(self.horizontal_dummy_two)
-        self.layout_two.addWidget(self.horizontal_dummy_three)
-        self.layout_two.addWidget(self.list_two)
-        self.layout_two.addWidget(self.button_four)
-        self.layout_two.addWidget(self.button_five)
+        self.tab_one_layout_two.addWidget(self.horizontal_dummy_one)
+        self.tab_one_layout_two.addWidget(self.horizontal_dummy_two)
+        self.tab_one_layout_two.addWidget(self.horizontal_dummy_three)
+        # self.tab_one_layout_two.addWidget(self.list_two)
+        # self.tab_one_layout_two.addWidget(self.button_four)
+        # self.tab_one_layout_two.addWidget(self.button_five)
 
-       # Parenting widgets
-        self.master_layout.setStretchFactor(self.layout_one, 1)
-        self.master_layout.setStretchFactor(self.layout_two, 5)        
+        # Tab two
+        self.tab_two_widget = QWidget()
+        self.master_tab_two_layout = QHBoxLayout(self.tab_two_widget)
+        
+
+        # Parenting widgets
+        self.master_tab.addTab(self.tab_one_widget, "Asset Adjust")
+        self.master_tab.addTab(self.tab_two_widget, "Pack and Ship")
+        self.master_tab_one_layout.setStretchFactor(self.tab_one_layout_one, 1)
+        self.master_tab_one_layout.setStretchFactor(self.tab_one_layout_two, 5)        
         self.setCentralWidget(self.master_widget)
         self.setLayout(self.master_layout)
 
@@ -573,3 +598,4 @@ if __name__ == '__main__':
     # window.show()
     # app.exec_()
     
+

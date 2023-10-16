@@ -1,0 +1,59 @@
+import sys
+from PySide2.QtCore import Qt
+from PySide2.QtWidgets import QApplication, QMainWindow, QSlider, QLabel, QVBoxLayout, QWidget
+
+class SnappingSlider(QSlider):
+    def __init__(self, orientation):
+        super().__init__(orientation)
+        
+    def sliderChange(self, change):
+        if change == QSlider.SliderValueChange:
+            # Calculate the nearest tick position
+            tick_interval = self.tickInterval()
+            value = self.value()
+            remainder = value % tick_interval
+            if remainder < tick_interval / 2:
+                snapped_value = value - remainder
+            else:
+                snapped_value = value + tick_interval - remainder
+            self.setValue(snapped_value)
+        super().sliderChange(change)
+
+class HorizontalSliderExample(QMainWindow):
+    def __init__(self):
+        super().__init__()
+
+        self.initUI()
+
+    def initUI(self):
+        self.setWindowTitle('Horizontal QSlider Example')
+        self.setGeometry(100, 100, 400, 150)
+
+        central_widget = QWidget(self)
+        self.setCentralWidget(central_widget)
+
+        layout = QVBoxLayout()
+
+        self.slider = SnappingSlider(Qt.Horizontal)
+        self.slider.setMinimum(0)
+        self.slider.setMaximum(100)
+        self.slider.setValue(50)
+        self.slider.setTickPosition(QSlider.TicksBelow)
+        self.slider.setTickInterval(10)
+        self.slider.valueChanged.connect(self.on_slider_value_changed)
+
+        self.label = QLabel("Value: 50")
+
+        layout.addWidget(self.slider)
+        layout.addWidget(self.label)
+
+        central_widget.setLayout(layout)
+
+    def on_slider_value_changed(self):
+        value = self.slider.value()
+        self.label.setText(f"Value: {value}")
+
+app = QApplication(sys.argv)
+ex = HorizontalSliderExample()
+ex.show()
+sys.exit(app.exec_())
