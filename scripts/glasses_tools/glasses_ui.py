@@ -1,4 +1,5 @@
 import sys
+import importlib
 from PySide2.QtCore import (
     QSize, 
     Qt,
@@ -27,6 +28,8 @@ import math
 sys.path.append("P:\Glasses\Preproduction\Glasses_Tools\scripts")
 from glasses_tools import glasses_utils as glutils
 from glasses_tools import glasses_widget_functions as glwidgetfuncs
+importlib.reload(glutils)
+importlib.reload(glwidgetfuncs)
 
 class GlassesTools(QMainWindow, QWidget):
     def __init__(self):
@@ -187,13 +190,19 @@ class GlassesTools(QMainWindow, QWidget):
         glwidgetfuncs.retransform_asset(cur_sel, self.edges_list)  
 
     def center_selection_button_clicked(self):
-        pass
+        cur_sel = mc.ls(sl=True)
+        glwidgetfuncs.center_selection(cur_sel)
 
     def realign_asset_button_clicked(self):
-        pass
+        glwidgetfuncs.realign_asset(self.edges_list)
 
     def rotate_ninety_button_clicked(self):
-        pass
+        cur_sel = mc.ls(sl=True)[0]
+        if '.' in cur_sel:
+            mc.select(cl=True)
+            cur_sel = mc.select(cur_sel.split('.'))[0]
+            cur_sel = mc.ls(sl=True)[0]
+        glwidgetfuncs.rotate_ninety(cur_sel)
 
 if __name__ == "__main__":
     try:
