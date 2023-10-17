@@ -1,4 +1,5 @@
 import maya.cmds as mc
+import maya.mel as mel
 import math
 from glasses_tools import glasses_utils as glutils
 
@@ -36,6 +37,7 @@ def realign_asset(list_widget):
     vtx_positions = glutils.convert_selection_to_components(selected_item, 'vtx')
     vector_direction = glutils.get_vector_direction(vtx_positions[2])
 
+    # Might be redundant
     if vector_direction == 'same':
         mc.warning(f"{selected_item} is already aligned.")
         return

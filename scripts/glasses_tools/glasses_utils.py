@@ -189,33 +189,31 @@ def reset_frozen_asset():
     mc.manipMoveContext('Move', e=True, mode=10)
     mel.eval("string $objs[] = `ls -sl -type transform -type geometryShape`;if (size($objs) > 0) { xform -cp; } manipPivot -rp -ro;")
     manip_pos = mc.manipMoveContext('Move', p=True, q=True)
-    
+    mc.manipMoveContext('Move', e=True, mode=10)
+    manip_rot = mc.manipMoveContext('Move', oa=True, q=True)
+    for rot in manip_rot:
+        new_rot = round(math.degrees(rot), 4)
+        manip_rot[manip_rot.index(rot)] = new_rot
+    print(manip_rot)
+
     # Get selection information
     face_sel = mc.ls(sl=True)[0]
     obj_sel = face_sel.split('.')[0]
-    ref_grp = mc.group(w=True, em=True)
-    grp_sel = mc.ls(sl=True)[0]
+    grp_sel = mc.group(w=True, em=True)
     mc.select(cl=True)
-    
-    # Move reference group and grab data
-    mc.move(manip_pos[0], manip_pos[1], manip_pos[2], ref_grp)
-    constrain = mc.normalConstraint(obj_sel, ref_grp, aim=[0,0,1], wut=0)
-    mc.delete(constrain)
-    ref_translate = mc.xform(grp_sel, t=True, q=True)
-    ref_rotate = mc.xform(grp_sel, ro=True, q=True)
-    
-    # Get obj current transform and add reference transforms
-    cur_translate = mc.xform(obj_sel, t=True, q=True)
-    cur_rotate = mc.xform(obj_sel, ro=True, q=True)
-    mc.parent(obj_sel, ref_grp)
-    mc.xform(ref_grp, t=[0,0,0])
-    mc.xform(ref_grp, ro=[0,0,0])
+
+    mc.move(manip_pos[0], manip_pos[1], manip_pos[2], grp_sel)
+    mc.rotate(manip_rot[0], manip_rot[1], manip_rot[2], grp_sel)
+    mc.parent(obj_sel, grp_sel)
+    mc.xform(grp_sel, t=[0,0,0])
+    mc.xform(grp_sel, ro=[0,0,0])
     mc.parent(obj_sel, w=True)
-    mc.delete(ref_grp)
+    mc.delete(grp_sel)
     mc.makeIdentity(obj_sel, apply=True, t=1, r=1, s=1, n=0)
     mc.move(0,0,0, f'{obj_sel}.scalePivot', f'{obj_sel}.rotatePivot', a=True)
-    mc.xform(obj_sel, ro=[90,0,0])
+    mc.rotate(0,0,-90, obj_sel)
     mc.makeIdentity(obj_sel, apply=True, t=1, r=1, s=1, n=0)
+
     
     return face_sel
 
