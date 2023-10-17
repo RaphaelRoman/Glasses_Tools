@@ -1,5 +1,5 @@
 import maya.cmds as mc
-import maya.mel as mc
+import maya.mel as mel
 import math
 
 def make_variables_for_instancing(name, num_instances):
@@ -69,7 +69,7 @@ def make_variables_for_instancing(name, num_instances):
             variable_list.append(cur_instance)
 
             
-    print(variable_list)
+    # print(variable_list)
     return variable_list
 
 def append_items_to_list(list_widget, items):
@@ -281,6 +281,3 @@ def get_vector_direction(vtx_pos):
         rounded_direction = 'same'
         
     return rounded_direction
-
-def printer():
-    print("HELLO WORLD")
