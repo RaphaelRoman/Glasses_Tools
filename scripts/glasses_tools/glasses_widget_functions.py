@@ -20,7 +20,7 @@ def retransform_asset(current_selection, list_widget):
     # Put edges of selected face in our list
     list_widget.clear()
     components = glutils.get_selection_components(face_sel, 'face', 'edge')
-    glutils.append_items_to_list(self.list_one, components)
+    glutils.append_items_to_list(list_widget, components)
 
 def realign_asset(self):
 

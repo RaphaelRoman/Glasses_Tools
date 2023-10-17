@@ -281,3 +281,6 @@ def get_vector_direction(vtx_pos):
         rounded_direction = 'same'
         
     return rounded_direction
+
+def printer():
+    print("HELLO WORLD")
