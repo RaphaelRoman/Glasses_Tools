@@ -4,8 +4,7 @@ from PySide2.QtCore import (
     QSize, 
     Qt,
     QTimer
-)
-    
+)    
 from PySide2.QtWidgets import (
     QApplication, 
     QMainWindow, 
@@ -18,18 +17,23 @@ from PySide2.QtWidgets import (
     QListWidget,
     QTabWidget,
     QSlider,
-    QDial
+    QDial,
+    QCheckBox,
+    QComboBox
 )
-
 from PySide2.QtGui import QPalette, QColor, QFont, QFontMetrics
 import maya.cmds as mc
 import maya.mel as mel
 import math
-sys.path.append("P:\Glasses\Preproduction\Glasses_Tools\scripts")
-from scripts.glasses_tools import rools_utils as glutils
-from scripts.glasses_tools import rools_widget_functions as glwidgetfuncs
-importlib.reload(glutils)
-importlib.reload(glwidgetfuncs)
+sys.path.append("P:\Glasses\Preproduction\Rools\scripts")
+from scripts.rools import rools_utils as rootils
+from scripts.rools import rools_tab_one_functions as roolonefuncs
+from scripts.rools import rools_tab_two_functions as rooltwofuncs
+from scripts.rools import rools_library as roolibs
+importlib.reload(rootils)
+importlib.reload(roolonefuncs)
+importlib.reload(rooltwofuncs)
+importlib.reload(roolibs)
 
 class Rools(QMainWindow, QWidget):
     def __init__(self):
@@ -58,11 +62,11 @@ class Rools(QMainWindow, QWidget):
 
         # Tab one
         self.tab_one_widget = QWidget()
-        self.master_tab_one_layout = QHBoxLayout(self.tab_one_widget)
+        self.tab_one_master_layout = QHBoxLayout(self.tab_one_widget)
     
         # Tab one, layout one
-        self.tab_one_layout_one = QVBoxLayout(self.tab_one_widget)
-        self.master_tab_one_layout.addLayout(self.tab_one_layout_one)
+        self.tab_one_layout_one = QVBoxLayout()
+        self.tab_one_master_layout.addLayout(self.tab_one_layout_one)
         self.retransform_asset_button = QPushButton("Retransform Asset")
         self.center_selection_button = QPushButton("Center Selection")
         self.realign_asset_button = QPushButton("Realign Asset")
@@ -87,7 +91,7 @@ class Rools(QMainWindow, QWidget):
 
         # Tab one, layout two
         self.tab_one_layout_two = QVBoxLayout()
-        self.master_tab_one_layout.addLayout(self.tab_one_layout_two)
+        self.tab_one_master_layout.addLayout(self.tab_one_layout_two)
         self.horizontal_dummy_one = QWidget()
         self.horizontal_dummy_two = QWidget()
         self.horizontal_dummy_three = QWidget()
@@ -95,11 +99,10 @@ class Rools(QMainWindow, QWidget):
         self.horizontal_two = QHBoxLayout(self.horizontal_dummy_two)
         self.horizontal_three = QHBoxLayout(self.horizontal_dummy_three)
 
-        self.variable_list = glutils.make_variables_for_instancing('vertical_dummy', 3)
+        self.variable_list = rootils.make_variables_for_instancing('vertical_dummy', 3)
         for self.var in self.variable_list:
             self.widget = QWidget()
             self.var = QVBoxLayout(self.widget)
-            # self.var.setAlignment(Qt.AlignCenter)
             self.horizontal_one.addWidget(self.widget)
 
             self.dial = QDial()
@@ -114,20 +117,11 @@ class Rools(QMainWindow, QWidget):
             self.slider.setValue(20)
             self.slider.setTickPosition(QSlider.TicksBelow)
             self.slider.setTickInterval(100)
-            # self.button.setFixedSize(50,50)z
-            # self.button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-            # self.font = self.button.font()
-            # self.font_metrics = QFontMetrics(self.font)
-            # self.font_width = self.font_metrics.width(self.button.text())
-            # self.font_height = self.font_metrics.height()
-            # self.button.setMinimumSize(self.font_width, self.font_height)
-            # self.button.setMaximumSize(self.font_width*2, self.font_height*2)
-            # self.button.adjustSize()
 
             self.var.addWidget(self.dial)
             self.var.addWidget(self.slider)
 
-        self.variable_list = glutils.make_variables_for_instancing('vertical_dummy', 3)
+        self.variable_list = rootils.make_variables_for_instancing('vertical_dummy', 3)
         for self.var in self.variable_list:
             self.widget = QWidget()
             self.var = QVBoxLayout(self.widget)
@@ -143,7 +137,7 @@ class Rools(QMainWindow, QWidget):
             self.var.addWidget(self.dial)
             self.var.addWidget(self.button)
 
-        self.variable_list = glutils.make_variables_for_instancing('vertical_dummy', 3)
+        self.variable_list = rootils.make_variables_for_instancing('vertical_dummy', 3)
         for self.var in self.variable_list:
             self.widget = QWidget()
             self.var = QVBoxLayout(self.widget)
@@ -168,13 +162,40 @@ class Rools(QMainWindow, QWidget):
 
         # Tab two
         self.tab_two_widget = QWidget()
-        self.master_tab_two_layout = QHBoxLayout(self.tab_two_widget)
+        self.tab_two_master_layout = QHBoxLayout(self.tab_two_widget)
 
-        # Parening
+        self.tab_two_layout_one = QVBoxLayout()
+        self.tab_two_master_layout.addLayout(self.tab_two_layout_one)
+
+        self.trs_checkbox_layout = QVBoxLayout()
+        self.tab_two_master_layout.addLayout(self.trs_checkbox_layout)
+
+        self.toggle_cb_options = QComboBox()
+        self.toggle_cb_options.addItems(["Default (All)", "Translate Only", "Rotate Only", "Scale Only", "Custom"])
+
+        self.tr_checkbox_layout = QHBoxLayout()
+        self.ro_checkbox_layout = QHBoxLayout()
+        self.tr_checkbox = QCheckBox("Translate")
+        self.ro_checkbox = QCheckBox("Rotate")
+        self.sc_checkbox = QCheckBox("Scale")
+        
+        self.test_button = QPushButton()
+        self.test_button.clicked.connect(print(self.toggle_cb_options.currentText))
+        self.tab_two_layout_one.addWidget(self.test_button)
+
+        self.tab_two_layout_one.addWidget(self.toggle_cb_options)
+        self.tab_two_layout_one.addWidget(self.tr_checkbox)
+
+        # Tab three
+        self.tab_three_widget = QWidget()
+        self.master_tab_three_layout = QHBoxLayout(self.tab_three_widget)
+
+        # Parenting
         self.master_tab.addTab(self.tab_one_widget, "Asset Adjust")
-        self.master_tab.addTab(self.tab_two_widget, "Pack and Ship")
-        self.master_tab_one_layout.setStretchFactor(self.tab_one_layout_one, 1)
-        self.master_tab_one_layout.setStretchFactor(self.tab_one_layout_two, 5)        
+        self.master_tab.addTab(self.tab_two_widget, "Create and Toggle")
+        self.master_tab.addTab(self.tab_three_widget, "Pack and Ship")
+        self.tab_one_master_layout.setStretchFactor(self.tab_one_layout_one, 1)
+        self.tab_one_master_layout.setStretchFactor(self.tab_one_layout_two, 5)        
         self.setCentralWidget(self.master_widget)
         self.setLayout(self.master_layout)
 
@@ -187,14 +208,14 @@ class Rools(QMainWindow, QWidget):
 
     def retransform_asset_button_clicked(self):
         cur_sel = mc.ls(sl=True)
-        glwidgetfuncs.retransform_asset(cur_sel, self.edges_list)  
+        roolonefuncs.retransform_asset(cur_sel, self.edges_list)  
 
     def center_selection_button_clicked(self):
         cur_sel = mc.ls(sl=True)
-        glwidgetfuncs.center_selection(cur_sel)
+        roolonefuncs.center_selection(cur_sel)
 
     def realign_asset_button_clicked(self):
-        glwidgetfuncs.realign_asset(self.edges_list)
+        roolonefuncs.realign_asset(self.edges_list)
 
     def rotate_ninety_button_clicked(self):
         cur_sel = mc.ls(sl=True)[0]
@@ -202,4 +223,14 @@ class Rools(QMainWindow, QWidget):
             mc.select(cl=True)
             cur_sel = mc.select(cur_sel.split('.'))[0]
             cur_sel = mc.ls(sl=True)[0]
-        glwidgetfuncs.rotate_ninety(cur_sel)
+        roolonefuncs.rotate_ninety(cur_sel)
+
+# run
+try:
+    window.close()
+    window.deleteLater()
+except:
+    pass
+    
+window = Rools()
+window.show()

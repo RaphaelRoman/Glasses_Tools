@@ -1,22 +1,12 @@
 import maya.cmds as mc
 import maya.mel as mel
 import math
+import importlib
+from scripts.rools import rools_library as roolibs
+importlib.reload(roolibs)
 
 def make_variables_for_instancing(name, num_instances):
     variable_list = []
-    ones = {1:'one', 2:'two', 3:'three', 
-            4:'four', 5:'five', 6:'six', 
-            7:'seven', 8:'eight', 9:'nine'}
-
-    special = { 10:'ten', 11:'eleven', 12:'twelve',
-                13:'thirteen', 14:'fourteen', 15:'fifteen',
-                16:'sixteen', 17:'seventeen', 18:'eighteen',
-                19:'nineteen'}
-
-    tens = {2:'twenty', 3:'thirty', 4:'forty', 
-            5:'fifty', 6:'sixty', 7:'seventy', 
-            8:'eighty', 9:'ninety'}
-        
     def int_to_word(integer):
         int_place = ''
         if num_instances == 0:
@@ -41,14 +31,14 @@ def make_variables_for_instancing(name, num_instances):
 
     for num in range(1, num_instances+1):
         if int_place == 'ones':
-            cur_instance = f"{name}_{ones[num]}"
+            cur_instance = f"{name}_{roolibs.ones_nums[num]}"
     
         if int_place == 'tens':
             if num < 10:
-                cur_instance = f"{name}_{ones[num]}"
+                cur_instance = f"{name}_{roolibs.ones_nums[num]}"
             
             elif 10 <= num <= 19:
-                cur_instance = f"{name}_{special[num]}"
+                cur_instance = f"{name}_{roolibs.special_nums[num]}"
 
             elif num >= 20:
                 if (num == 20 or
@@ -60,16 +50,14 @@ def make_variables_for_instancing(name, num_instances):
                     num == 80 or
                     num == 90
                     ):
-                    cur_instance = f"{name}_{tens[int(str(num)[0])]}"
+                    cur_instance = f"{name}_{roolibs.tens_nums[int(str(num)[0])]}"
                 
                 else:
-                    cur_instance = f"{name}_{tens[int(str(num)[0])]}_{ones[int(str(num)[1])]}"
+                    cur_instance = f"{name}_{roolibs.tens_nums[int(str(num)[0])]}_{roolibs.ones_nums[int(str(num)[1])]}"
 
         if cur_instance not in variable_list:
             variable_list.append(cur_instance)
 
-            
-    # print(variable_list)
     return variable_list
 
 def append_items_to_list(list_widget, items):

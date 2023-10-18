@@ -1,32 +1,36 @@
 import maya.cmds as mc
 import maya.mel as mel
 import math
-from scripts.glasses_tools import rools_utils as glutils
+import importlib
+from scripts.rools import rools_utils as rootils
+from scripts.rools import rools_library as roolibs
+importlib.reload(rootils)
+importlib.reload(roolibs)
 
 def retransform_asset(current_selection, list_widget):
     
     # Prechecks
-    length_passed = glutils.check_selection_length(len(current_selection), 1)
+    length_passed = rootils.check_selection_length(len(current_selection), 1)
     if not length_passed:
         return
-    component_passed = glutils.check_selection_components(current_selection, 'face', absolute=True)
+    component_passed = rootils.check_selection_components(current_selection, 'face', absolute=True)
 
     if not component_passed or component_passed == 'non_component':
         mc.warning("Please select a face.")
         return
 
     # Retransform object
-    face_sel = glutils.reset_frozen_asset()
+    face_sel = rootils.reset_frozen_asset()
 
     # Put edges of selected face in our list
     list_widget.clear()
-    components = glutils.get_selection_components(face_sel, 'face', 'edge')
-    glutils.append_items_to_list(list_widget, components)
+    components = rootils.get_selection_components(face_sel, 'face', 'edge')
+    rootils.append_items_to_list(list_widget, components)
 
 def realign_asset(list_widget):
 
     # Prechecks
-    component_passed = glutils.check_selection_components(list_widget.selectedItems()[0].text(), 'edge', absolute=True)
+    component_passed = rootils.check_selection_components(list_widget.selectedItems()[0].text(), 'edge', absolute=True)
     if not component_passed or component_passed == 'non_component':
         mc.warning("Please select an edge")
         return
@@ -34,8 +38,8 @@ def realign_asset(list_widget):
     selected_item = list_widget.selectedItems()[0].text()
     obj_of_item = selected_item.split('.')[0]
 
-    vtx_positions = glutils.convert_selection_to_components(selected_item, 'vtx')
-    vector_direction = glutils.get_vector_direction(vtx_positions[2])
+    vtx_positions = rootils.convert_selection_to_components(selected_item, 'vtx')
+    vector_direction = rootils.get_vector_direction(vtx_positions[2])
 
     # Might be redundant
     if vector_direction == 'same':
@@ -79,9 +83,9 @@ def rotate_ninety(current_selection):
 
 def center_selection(current_selection):
     cur_sel = mc.ls(sl=True)
-    sel_type = glutils.check_selection_components(components=current_selection)
+    sel_type = rootils.check_selection_components(components=current_selection)
 
-    if not glutils.check_selection_length(len(current_selection), 1):
+    if not rootils.check_selection_length(len(current_selection), 1):
         return
 
     if sel_type == 'non_component':
