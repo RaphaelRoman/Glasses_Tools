@@ -44,7 +44,7 @@ class Rools(QMainWindow, QWidget):
         super().__init__()
 
         # Naming and Sizing
-        self.window_name = "Glasses Tools"
+        self.window_name = "Rools (Raph Tools)"
         self.setWindowTitle(self.window_name)
         self.setFixedSize(QSize(800,600))
         self.setMinimumSize(QSize(800,600))
@@ -187,7 +187,7 @@ class Rools(QMainWindow, QWidget):
         self.test_button.clicked.connect(print(self.toggle_cb_options.currentText))
         self.tab_two_layout_one.addWidget(self.test_button)
 
-        self.
+        # self.
 
         self.tab_two_layout_one.addWidget(self.toggle_cb_options)
         self.tab_two_layout_one.addWidget(self.tr_checkbox)
