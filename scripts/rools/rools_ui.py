@@ -3,7 +3,9 @@ import importlib
 from PySide2.QtCore import (
     QSize, 
     Qt,
-    QTimer
+    QTimer,
+    QDir,
+    QUrl
 )    
 from PySide2.QtWidgets import (
     QApplication, 
@@ -19,8 +21,10 @@ from PySide2.QtWidgets import (
     QSlider,
     QDial,
     QCheckBox,
-    QComboBox
+    QComboBox,
 )
+from PySide2.QtMultimedia import QMediaContent, QMediaPlayer
+from PySide2.QtMultimediaWidgets import QVideoWidget
 from PySide2.QtGui import QPalette, QColor, QFont, QFontMetrics
 import maya.cmds as mc
 import maya.mel as mel
@@ -182,6 +186,8 @@ class Rools(QMainWindow, QWidget):
         self.test_button = QPushButton()
         self.test_button.clicked.connect(print(self.toggle_cb_options.currentText))
         self.tab_two_layout_one.addWidget(self.test_button)
+
+        self.
 
         self.tab_two_layout_one.addWidget(self.toggle_cb_options)
         self.tab_two_layout_one.addWidget(self.tr_checkbox)
